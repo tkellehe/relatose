@@ -80,7 +80,7 @@ class Token:
                                           match.end(param)))
     #-------------------------------------------------------------------------------------
     # A function which will be invoked after everything has been parsed.
-    def translate(self):
+    def interpret(self):
         pass
 
 ##########################################################################################
@@ -124,6 +124,12 @@ class Executable:
         self.script = script
         self.code = code
         self.tokens = []
+    #-------------------------------------------------------------------------------------
+    # Execute the interpreted tokens.
+    def run(self):
+        # All of the tokens now have been packed.
+        for tkn in self.tokens:
+            tkn.interpret(tkn)
 
 ##########################################################################################
 # Is the actual parser that will generate the Tokens.
@@ -167,8 +173,5 @@ class Parser:
                 index = tkn.end
             else:
                 index += 1
-
-        # All of the tokens now have been packed.
-        for tkn in self.tokens:
-            tkn.translate(tkn)
+        return executable
     
