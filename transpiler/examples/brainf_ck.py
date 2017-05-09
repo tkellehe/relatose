@@ -1,17 +1,17 @@
 import transpiler
 import sys
 
-script = transpiler.Script()
+parser = transpiler.Parser()
 
-def tokenize_baskics(tkn):
+def tokenize_basics(tkn):
     tkn.props.lines = []
 
 def tokenize(tkn):
-    def translator(tkn):
+    def interpreter(tkn):
         tkn.props.lines.append("tape[index] = (tape[index] + " + len(tkn.literal.value) + ") % 256")
     tokenize_basics(tkn)
-    tkn.translate = translator
-script.add(Snippet(transpiler.REGEXIFY("(?P<literal>\++)"), tokenize))
+    tkn.interpret = interpreter
+parser.add(Snippet(transpiler.REGEXIFY("(?P<literal>\++)"), tokenize))
 
 
 def main():
@@ -21,6 +21,8 @@ def main():
     import sys
     def stdout(char):
         print(char, end='', flush=True)
+    def stdin():
+        return 0
     def main():
         tape = [0]
         index = 0
