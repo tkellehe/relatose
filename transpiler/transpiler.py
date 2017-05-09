@@ -127,7 +127,7 @@ class Executable:
 
 ##########################################################################################
 # Is the actual parser that will generate the Tokens.
-class Script:
+class Parser:
     #-------------------------------------------------------------------------------------
     # Constructor.
     def __init__(self):
