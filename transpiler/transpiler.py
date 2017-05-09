@@ -43,6 +43,8 @@ class Token:
         self.index = None
         # The snippet object in charge of creating and maintaining this token.
         self.snippet = None
+        # The executable that represents a block of tokens.
+        self.executable = None
 
         # Now, loop through and collect all of the symbols (named groups).
         groupnames = match.groupdict()
@@ -86,14 +88,14 @@ class Token:
 class Snippet:
     #-------------------------------------------------------------------------------------
     # Constructor.
-    def __init__(self, regex, traverse = None):
+    def __init__(self, regex, tokenize = None):
         self.props = Extendable()
         self.regex = regex
         self.script = None
         # A function that if returns False will reject the Snippets regex.
         # Also, here is where any extra parsing can take place to handle complicated
         # loops.
-        self.traverse = self.donothing if traverse == None else traverse
+        self.tokenize = self.donothing if tokenize == None else tokenize
     #-------------------------------------------------------------------------------------
     # The actual function that applies the regex then the traverse function for the
     # final say.
@@ -102,8 +104,8 @@ class Snippet:
         if(match != None):
             token = Token(match, code, start, end)
             token.snippet = self
-            r = self.traverse(token)
-            # If there result is None or True, return the token else return None.
+            r = self.tokenize(token)
+            # If the result is None or True, return the token else return None.
             return token if r == None or r == True else None
         # Returning None implies it could not create the token based off of the code.
         return None
@@ -113,6 +115,17 @@ class Snippet:
         pass
 
 ##########################################################################################
+# A representation of a script.
+class Executable:
+    #-------------------------------------------------------------------------------------
+    # Constructor.
+    def __init__(self, script, code):
+        self.props = Extendable()
+        self.script = script
+        self.code = code
+        self.tokens = []
+
+##########################################################################################
 # Is the actual parser that will generate the Tokens.
 class Script:
     #-------------------------------------------------------------------------------------
@@ -120,7 +133,6 @@ class Script:
     def __init__(self):
         self.props = Extendable()
         self.snippets = []
-        self.tokens = []
     #-------------------------------------------------------------------------------------
     # Add snippet objects that will be used when parsing the code.
     def add(self, snippet):
@@ -129,6 +141,7 @@ class Script:
     #-------------------------------------------------------------------------------------
     # Attempt to create a set of tokens based off of the code provided.
     def parse_left_to_right(self, code):
+        executable = Executable(self, code)
         index = 0
         # This code is based off of the concept that whoever can make the
         # most sense out of the code most code, should be the one to
@@ -148,7 +161,8 @@ class Script:
             # Selected the token that makes the most sense out of the most characters.
             # Now can place onto the list of tokens.
             if tkn != None:
-                tkn.index = len(self.tokens)
+                tkn.executable = executable
+                tkn.index = len(executable.tokens)
                 self.tokens.append(tkn)
                 index = tkn.end
             else:
@@ -157,3 +171,4 @@ class Script:
         # All of the tokens now have been packed.
         for tkn in self.tokens:
             tkn.translate(tkn)
+    
