@@ -7,7 +7,7 @@ def REGEXIFY(rstring):
     return re.compile(u"^" + rstring + u"$")
 
 CONTINUE = 0
-EXIT = 1
+ABORT = 1
 IGNORE = 2
 OVERRIDE = 3
 
@@ -168,7 +168,7 @@ class Parser:
             while end < len(code):
                 for snippet in self.snippets:
                     temp = snippet.parse(code, index, end+1)
-                    if temp[1] == ERROR:
+                    if temp[1] == ABORT:
                         end = len(code)
                         index = len(code)
                         break
@@ -185,9 +185,8 @@ class Parser:
             if tkn != None:
                 tkn.executable = executable
                 tkn.index = len(executable.tokens)
-                self.tokens.append(tkn)
+                executable.tokens.append(tkn)
                 index = tkn.end
             else:
                 index += 1
         return executable
-    
