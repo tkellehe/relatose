@@ -6,6 +6,11 @@ Extendable = type('Extendable', (object,), {})
 def REGEXIFY(rstring):
     return re.compile(u"^" + rstring + u"$")
 
+CONTINUE = 0
+EXIT = 1
+IGNORE = 2
+OVERRIDE = 3
+
 ##########################################################################################
 # A class that represents a single symbol recognized that holds meaning within a token.
 class Symbol:
@@ -105,10 +110,14 @@ class Snippet:
             token = Token(match, code, start, end)
             token.snippet = self
             r = self.tokenize(token)
+            if r == None or r == True:
+                r = CONTINUE
+            elif r == False:
+                r = IGNORE
             # If the result is None or True, return the token else return None.
-            return token if r == None or r == True else None
+            return (token if r == CONTINUE or r == OVERRIDE else None, r)
         # Returning None implies it could not create the token based off of the code.
-        return None
+        return (None, CONTINUE)
     #-------------------------------------------------------------------------------------
     # A do nothing function that is used by default when traversing.
     def donothing(self, token):
@@ -155,13 +164,20 @@ class Parser:
         while index < len(code):
             end = index
             tkn = None
+            # Attempts to select a token that represents the most tokens.
             while end < len(code):
                 for snippet in self.snippets:
                     temp = snippet.parse(code, index, end+1)
-                    if tkn == None:
-                        tkn = temp
-                    elif temp != None:
-                        tkn = temp
+                    if temp[1] == ERROR:
+                        end = len(code)
+                        index = len(code)
+                        break
+                    if temp[1] == OVERRIDE:
+                        tkn = temp[0]
+                    elif tkn == None:
+                        tkn = temp[0]
+                    elif temp[0] != None and temp[1] != IGNORE:
+                        tkn = temp[0]
                 end += 1
 
             # Selected the token that makes the most sense out of the most characters.
